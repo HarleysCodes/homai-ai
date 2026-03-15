@@ -8,7 +8,6 @@ import AIChat from './components/AIChat';
 import SystemStatus from './components/SystemStatus';
 import DataUpload from './components/DataUpload';
 import Settings from './components/Settings';
-import Install from './components/Install';
 import './App.css';
 
 function App() {

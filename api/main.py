@@ -3,7 +3,7 @@ HOMAI API - FastAPI Backend for AI Real Estate Operating System
 """
 
 import os
-import asyncio
+import sqlite3
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
@@ -65,6 +65,70 @@ class ChatMessage(BaseModel):
     message: str
     context: Optional[Dict[str, Any]] = None
     history: Optional[List[Dict[str, str]]] = []
+
+
+# Properties endpoint
+@app.get("/api/properties")
+async def get_properties():
+    """Get all properties from database"""
+    db_path = os.path.join(os.path.dirname(__file__), "..", "data", "properties.db")
+    if not os.path.exists(db_path):
+        return JSONResponse({"properties": [], "total": 0})
+    
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM properties")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    properties = [dict(row) for row in rows]
+    return {"properties": properties, "total": len(properties)}
+
+
+@app.get("/api/properties/{property_id}")
+async def get_property(property_id: int):
+    """Get a single property by ID"""
+    db_path = os.path.join(os.path.dirname(__file__), "..", "data", "properties.db")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM properties WHERE id = ?", (property_id,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail="Property not found")
+    return dict(row)
+
+
+@app.get("/api/properties/stats/summary")
+async def get_property_stats():
+    """Get summary statistics for properties"""
+    db_path = os.path.join(os.path.dirname(__file__), "..", "data", "properties.db")
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM properties")
+    total = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT AVG(price) FROM properties")
+    avg_price = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT AVG(rent_estimate) FROM properties")
+    avg_rent = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT AVG(sqft) FROM properties")
+    avg_sqft = cursor.fetchone()[0] or 0
+    
+    conn.close()
+    
+    return {
+        "total_properties": total,
+        "average_price": round(avg_price, 0),
+        "average_rent": round(avg_rent, 0),
+        "average_sqft": round(avg_sqft, 0)
+    }
 
 
 # ============ Utilities ============

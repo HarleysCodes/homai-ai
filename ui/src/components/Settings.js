@@ -22,8 +22,44 @@ export default function Settings() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const copyInstall = () => {
+    navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/HarleysCodes/homai-ai/main/install_homai.sh)');
+    alert('Copied!');
+  };
+
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'left' }}>
+      {/* One-Click Install */}
+      <div style={{ 
+        background: 'linear-gradient(135deg, #1e3a5f, #2d5a87)', 
+        borderRadius: '16px', 
+        padding: '2rem',
+        marginBottom: '1.5rem'
+      }}>
+        <h3 style={{ color: '#fff', marginTop: 0 }}>🚀 One-Click Install HOMAI</h3>
+        <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem' }}>
+          Install Ollama + Qwen AI + HOMAI on your Mac in one command.
+        </p>
+        <div style={{ 
+          background: 'rgba(0,0,0,0.4)', 
+          padding: '0.75rem', 
+          borderRadius: '8px',
+          fontFamily: 'monospace',
+          fontSize: '0.8rem',
+          color: '#3fb950',
+          marginBottom: '1rem'
+        }}>
+          bash &lt;(curl -fsSL https://raw.githubusercontent.com/HarleysCodes/homai-ai/main/install_homai.sh)
+        </div>
+        <button onClick={copyInstall} style={{
+          background: 'rgba(255,255,255,0.2)',
+          color: 'white', border: 'none', padding: '0.6rem 1.2rem',
+          borderRadius: '8px', fontWeight: '600', cursor: 'pointer'
+        }}>
+          📋 Copy Command
+        </button>
+      </div>
+      
       <h2>⚙️ Settings</h2>
       
       {/* Claude API */}
