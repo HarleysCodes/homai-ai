@@ -26,7 +26,7 @@ ollama pull qwen2.5:7b
 echo "📁 Setting up HOMAI..."
 if [ ! -d "$HOME/homai" ]; then
     cd $HOME
-    git clone https://github.com/your-repo/homai.git 2>/dev/null || mkdir -p homai
+    git clone https://github.com/HarleysCodes/homai-ai.git 2>/dev/null || mkdir -p homai
 fi
 
 cd $HOME/homai

@@ -4,7 +4,7 @@ export default function Install() {
   const [copied, setCopied] = useState(false);
 
   const copyInstall = () => {
-    navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/CryptoAscend/homai-ai/main/install_homai.sh)');
+    navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/HarleysCodes/homai-ai/main/install_homai.sh)');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -73,7 +73,7 @@ brew install ollama
 ollama pull qwen2.5:7b
 
 # 2. Clone and run HOMAI
-git clone https://github.com/CryptoAscend/homai-ai
+git clone https://github.com/HarleysCodes/homai-ai
 cd homai-ai/ui
 npm install
 npm start`}
