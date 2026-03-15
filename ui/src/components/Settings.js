@@ -3,10 +3,15 @@ import React, { useState, useEffect } from 'react';
 export default function Settings() {
   const [claudeKey, setClaudeKey] = useState('');
   const [saved, setSaved] = useState(false);
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [approvedUsers, setApprovedUsers] = useState([]);
 
   useEffect(() => {
     const savedKey = localStorage.getItem('claude_api_key');
     if (savedKey) setClaudeKey(savedKey);
+    
+    setPendingUsers(JSON.parse(localStorage.getItem('homai_pending_users') || '[]'));
+    setApprovedUsers(JSON.parse(localStorage.getItem('homai_approved_users') || '[]'));
   }, []);
 
   const handleSave = () => {
@@ -25,6 +30,21 @@ export default function Settings() {
   const copyInstall = () => {
     navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/HarleysCodes/homai-ai/main/install_homai.sh)');
     alert('Copied!');
+  };
+
+  const approveUser = (email) => {
+    const newApproved = [...approvedUsers, email];
+    const newPending = pendingUsers.filter(u => u !== email);
+    localStorage.setItem('homai_approved_users', JSON.stringify(newApproved));
+    localStorage.setItem('homai_pending_users', JSON.stringify(newPending));
+    setApprovedUsers(newApproved);
+    setPendingUsers(newPending);
+  };
+
+  const denyUser = (email) => {
+    const newPending = pendingUsers.filter(u => u !== email);
+    localStorage.setItem('homai_pending_users', JSON.stringify(newPending));
+    setPendingUsers(newPending);
   };
 
   return (
@@ -166,6 +186,82 @@ cd homai/ui && npm start`}
             <span style={{ color: '#6e7681' }}>⚪ Requires local install</span>
           </div>
         </div>
+      </div>
+
+      {/* Admin Panel */}
+      <div style={{ 
+        background: 'rgba(22,27,34,0.8)', 
+        border: '1px solid rgba(139,148,158,0.15)', 
+        borderRadius: '16px', 
+        padding: '2rem',
+        marginTop: '1.5rem'
+      }}>
+        <h3 style={{ color: '#e6edf3', marginBottom: '1rem' }}>👑 Beta Approvals</h3>
+        
+        {pendingUsers.length === 0 && approvedUsers.length === 0 ? (
+          <p style={{ color: '#8b949e', fontSize: '0.9rem' }}>
+            No pending requests yet.
+          </p>
+        ) : (
+          <>
+            {pendingUsers.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ color: '#d29922', marginBottom: '0.75rem' }}>⏳ Pending ({pendingUsers.length})</h4>
+                {pendingUsers.map((email, i) => (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem',
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '8px',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <span style={{ color: '#fff' }}>{email}</span>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => approveUser(email)} style={{
+                        background: '#238636',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '0.4rem 0.75rem',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.8rem'
+                      }}>✓ Approve</button>
+                      <button onClick={() => denyUser(email)} style={{
+                        background: 'rgba(210,153,34,0.2)',
+                        color: '#d29922',
+                        border: '1px solid rgba(210,153,34,0.3)',
+                        padding: '0.4rem 0.75rem',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.8rem'
+                      }}>✕ Deny</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {approvedUsers.length > 0 && (
+              <div>
+                <h4 style={{ color: '#3fb950', marginBottom: '0.75rem' }}>✓ Approved ({approvedUsers.length})</h4>
+                {approvedUsers.map((email, i) => (
+                  <div key={i} style={{
+                    padding: '0.5rem 0.75rem',
+                    background: 'rgba(0,0,0,0.2)',
+                    borderRadius: '6px',
+                    marginBottom: '0.5rem',
+                    color: '#8b949e',
+                    fontSize: '0.9rem'
+                  }}>
+                    {email}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
