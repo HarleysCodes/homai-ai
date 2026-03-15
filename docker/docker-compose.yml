@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: homai_postgres
+    environment:
+      POSTGRES_DB: homai
+      POSTGRES_USER: homai_user
+      POSTGRES_PASSWORD: homai_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - homai_network
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:v1.7.0
+    container_name: homai_qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    networks:
+      - homai_network
+
+  # Qwen GGUF Inference Server
+  qwen:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    container_name: homai_qwen
+    command: |
+      -m /models/qwen2.5-7b-instruct-q4_0.gguf
+      -c 4096
+      --host 0.0.0.0
+      --port 8080
+      --parallel 4
+    volumes:
+      - ./models:/models
+    ports:
+      - "8080:8080"
+    networks:
+      - homai_network
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: homai_backend
+    environment:
+      DATABASE_URL: postgresql://homai_user:homai_pass@postgres:5432/homai
+      QDRANT_URL: http://qdrant:6333
+      QWEN_URL: http://qwen:8080
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENCLAW_URL: http://openclaw:8899
+    depends_on:
+      - postgres
+      - qdrant
+      - qwen
+    ports:
+      - "8000:8000"
+    networks:
+      - homai_network
+    volumes:
+      - ./api:/app
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: homai_frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    networks:
+      - homai_network
+    depends_on:
+      - backend
+
+  # OpenClaw Gateway
+  openclaw:
+    image: openclawio/openclaw:latest
+    container_name: homai_openclaw
+    ports:
+      - "8899:8899"
+    networks:
+      - homai_network
+    volumes:
+      - openclaw_data:/data
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  openclaw_data:
+
+networks:
+  homai_network:
+    driver: bridge
